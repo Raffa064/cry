@@ -28,20 +28,30 @@ function cry/generate() {
 function cry/run() {
   local cmd_name="$1"
 
-  if [ ! -f "$workdir/$cmd_name" ]; then
-    echo "Unknon command '$cmd_name'"
-    return 1
-  fi
-
   local echo_cmd=1
   if [ "$1" == "-e" ]; then
     cmd_name="$2"
     echo_cmd=0
   fi
 
-  declare -A cmd
-  source ./$cmd_name
-  local cmd="curl${cmd[X]}${cmd[url]}${cmd[H]}${cmd[d]}"
+
+  if [ ! -f "$workdir/$cmd_name" ]; then
+    echo "Unknon command '$cmd_name'"
+    return 1
+  fi
+
+  declare -A cmd && source ./$cmd_name
+
+  local cookies=""
+  if [ -n "${cmd[cookies]}" ]; then
+    local file="${cmd[cookies]:1}"
+    cookies=" -c cookies/$file -b cookies/$file"
+
+    mkdir -p cookies
+  fi
+
+  local args="${cmd[X]}${cmd[url]}${cookies}${cmd[H]}${cmd[d]}"
+  local cmd="curl -s -i -w '%{http_code}' -o tmp/body$args"
 
   for req in ${cmd[require]}; do
     echo -en "Enter value for \e[34m'$req'\e[0m: "
@@ -52,7 +62,21 @@ function cry/run() {
   if [ $echo_cmd -eq 0 ]; then
     echo $cmd
   else
-    eval "$cmd"
+    mkdir -p tmp
+
+    status_code=$(eval "$cmd")
+    
+    echo -e "\e[33m"
+    cat tmp/body
+    echo -e "\e[0m\n"
+
+    if [ "$status_code" -eq "200" ]; then
+      echo -e "\e[32mStatus: $status_code\e[0m"
+    else
+      echo -e "\e[31mStatus: $status_code\e[0m"
+    fi
+
+    rm -rf tmp
   fi
 }
 

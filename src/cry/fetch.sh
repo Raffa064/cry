@@ -34,6 +34,10 @@ function header() {
   curr_cmd[H]+=' -H "'$1': '$2'"'
 }
 
+function use-cookies() {
+  curr_cmd[cookies]="$1"
+}
+
 function body() {
   curr_cmd[d]="-d '$1'"
 }
