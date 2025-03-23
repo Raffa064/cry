@@ -22,10 +22,19 @@ function cry/locate_workdir() {
 }
 
 function cry/generate() {
+  echo "Generating..."
   source ../$CRY_FILE
+
+  # store cache
+  rm .cache >/dev/null 2>&1
+  cp "../$CRY_FILE" .cache
 }
 
 function cry/run() {
+  if [ "../$CRY_FILE" -nt ".cache" ]; then
+    cry/generate
+  fi
+
   local cmd_name="$1"
 
   local echo_cmd=1
@@ -65,7 +74,7 @@ function cry/run() {
     mkdir -p tmp
 
     status_code=$(eval "$cmd")
-    
+
     echo -e "\e[33m"
     cat tmp/body
     echo -e "\e[0m\n"
