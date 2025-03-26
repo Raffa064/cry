@@ -17,6 +17,14 @@ To install Cry, run:
 bpm install cry
 ```
 
+After done, will be able to run it with `bpm run cry`. To avoid calling bpm run every time, you can export it:
+
+```bash
+bpm export cry
+```
+
+It's done. Now you can use it anywhere simply by calling `cry <command>`.
+
 ## Usage  
 
 To use Cry, you need to create a script file called `cry.sh` inside a directory. This file defines your **Cry commands** and determines the root of Cry's working directory—just like `git` and `npm` do.  
