@@ -13,17 +13,25 @@ function begin() {
 }
 
 function use-template() {
-  local cloned_cmd="$1"
-  local cloned_source=$(cat $cloned_cmd)
+  local template_cmd="$1" # which command will be used as template
+  
+  # Prevent overriding command name
   local cmd_name="${curr_cmd[name]}"
+  
+  local template_source=$(cat $template_cmd) # load temaplte file contents
+  
   local -n cmd=curr_cmd
-  eval $cloned_source
-  curr_cmd[name]="$cmd_name"
+  eval $template_source # load template data into current command
+
+  curr_cmd[name]="$cmd_name" # Restore command name
 }
 
 methods=(get post delete put patch update head options trace connect)
 for m in "${methods[@]}"; do
-eval 'function '$m'() { curr_cmd[X]="-X '${m^^}'"; curr_cmd[url]="$HOST$1"; }'
+  eval 'function '$m'() {
+    curr_cmd[X]="-X '${m^^}'";
+    curr_cmd[url]="$HOST$1";
+  }'
 done
 
 function require() {
@@ -45,31 +53,30 @@ function body() {
 function end() {
   local cmd_name=${curr_cmd[name]}
 
-  if [ -f "$cmd_name" ]; then
-    rm "$cmd_name"
-  fi
+  required_fields="${curr_cmd[require]}"
+  curr_cmd[require]="" # Clear required fields
 
-  required="${curr_cmd[require]}"
-  unsolved_req=""
-
-  declare -A R
-  for req in $required; do
-    if [ -n "${!req}" ]; then
-      R[$req]="${!req}"
-      unset $req
+  declare -A solved_fields
+  for field in $required_fields; do
+    if [ -n "${!field}" ]; then # check for global variable with the field's name
+      solved_fields[$field]="${!field}"
+      unset $field # remove global variable
     else
-      unsolved_req+=" $req"
+      curr_cmd[require]+=" $field" # keep unsolved fields
     fi
   done
 
-  curr_cmd[require]="$unsolved_req"
+  if [ -f "$cmd_name" ]; then
+    rm "$cmd_name" # erase exiting command file
+  fi
 
+  # Iterate over current command properties, and store them into command's file 
   for key in "${!curr_cmd[@]}"; do
     local value="${curr_cmd[$key]}"
-    value=$(echo $value | sed 's/"/\\"/g')
+    value=$(echo $value | sed 's/"/\\"/g') # sanitize quotes
     
-    for r in "${!R[@]}"; do
-      value=$(echo "$value" | sed "s/%$r/${R[$r]}/g")
+    for field in "${!solved_fields[@]}"; do
+      value=$(echo "$value" | sed "s/%$field/${solved_fields[$field]}/g") # replace %variables (inject required fields)
     done
 
     echo "cmd[$key]=\" $value\"" >> "$cmd_name"
