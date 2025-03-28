@@ -1,8 +1,9 @@
+
 # Cry
 
 Cry is a simple CLI tool for testing APIs, built entirely with Bash.  
 
-## Powered by Curl  
+## Powered by Curl
 
 This tool is essentially an abstraction over `curl`, allowing you to modularize HTTP requests into **commands**.  
 
@@ -121,7 +122,7 @@ cry create-user
 
 Cry will prompt for values:  
 
-```bash
+```txt
 Enter value for 'name': Example  
 Enter value for 'email': example@email.com  
 Enter value for 'password': example123  
