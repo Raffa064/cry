@@ -2,7 +2,7 @@ import cry.cmd
 
 # Must be runned inside .cry dir
 function cry/run() {
-  if [ "../$CRY_FILE" -nt ".cache" ]; then
+  if [ "../cry.sh" -nt ".cache" ]; then
     cry/cmd-gen # auto generate
   fi
 
@@ -62,6 +62,6 @@ function cry/run() {
       echo -e "\e[31mStatus: $status_code\e[0m"
     fi
 
-    rm -rf tmp # remove tmo dir
+    rm -rf tmp # remove tmp dir
   fi
 }

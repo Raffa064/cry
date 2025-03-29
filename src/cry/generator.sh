@@ -52,19 +52,7 @@ function body() {
 
 function end() {
   local cmd_name=${curr_cmd[name]}
-
-  required_fields="${curr_cmd[require]}"
-  curr_cmd[require]="" # Clear required fields
-
-  declare -A solved_fields
-  for field in $required_fields; do
-    if [ -n "${!field}" ]; then # check for global variable with the field's name
-      solved_fields[$field]="${!field}"
-      unset $field # remove global variable
-    else
-      curr_cmd[require]+=" $field" # keep unsolved fields
-    fi
-  done
+  local cmd_file="./commands/$cmd_name"
 
   if [ -f "$cmd_name" ]; then
     rm "$cmd_name" # erase exiting command file
@@ -75,10 +63,19 @@ function end() {
     local value="${curr_cmd[$key]}"
     value=$(echo $value | sed 's/"/\\"/g') # sanitize quotes
     
-    for field in "${!solved_fields[@]}"; do
-      value=$(echo "$value" | sed "s/%$field/${solved_fields[$field]}/g") # replace %variables (inject required fields)
-    done
+    echo "cmd[$key]=\" $value\"" >> "$cmd_file"
+  done
 
-    echo "cmd[$key]=\" $value\"" >> "./commands/$cmd_name"
+  required_fields="${curr_cmd[require]}"
+  curr_cmd[require]="" # Clear required fields
+
+  for field in $required_fields; do
+    if [ -n "${!field}" ]; then # check for global variable with the field's name
+       sed -i "s/%$field/${solved_fields[$field]}/g" "$cmd_file" # replace %variables (inject required fields)
+
+      unset $field # remove global variable
+    else
+      curr_cmd[require]+=" $field" # keep unsolved fields
+    fi
   done
 }
