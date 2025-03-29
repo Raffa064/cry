@@ -79,6 +79,6 @@ function end() {
       value=$(echo "$value" | sed "s/%$field/${solved_fields[$field]}/g") # replace %variables (inject required fields)
     done
 
-    echo "cmd[$key]=\" $value\"" >> "$cmd_name"
+    echo "cmd[$key]=\" $value\"" >> "./commands/$cmd_name"
   done
 }
